@@ -42,6 +42,12 @@ jobs:
         run: ./gradlew pack
         working-directory: Mindustry
 
+      - name: Fix Legacy iOS Pathing Bug
+        run: |
+          mkdir -p ios/libs
+          find ../Arc -name "*.a" -exec cp {} ios/libs/ \;
+        working-directory: Mindustry
+
       - name: Compile IPA
         run: ./gradlew ios:createIPA -Probovm.iosSkipSigning=true
         working-directory: Mindustry
