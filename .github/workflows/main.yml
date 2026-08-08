@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-13
 
     steps:
       - name: Checkout Mindustry
@@ -36,13 +36,13 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Install C++ Build Tools (The Missing Link)
+      - name: Install C++ Build Tools
         run: brew install ant autoconf automake libtool pkg-config
 
       - name: Compile Arc iOS Natives
         run: |
           chmod +x ./gradlew
-          ./gradlew jnigen jnigenBuildIOS
+          ./gradlew jnigen jnigenBuildAllIOS
         working-directory: Arc
 
       - name: Inject MetalANGLE Framework
