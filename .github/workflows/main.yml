@@ -13,22 +13,7 @@ jobs:
         with:
           repository: Anuken/Mindustry
           ref: v159.7
-          path: Mindustry
           lfs: true
-
-      - name: Checkout Arc (Full History)
-        uses: actions/checkout@v4
-        with:
-          repository: Anuken/Arc
-          path: Arc
-          fetch-depth: 0
-          lfs: true
-
-      - name: Switch to exact Arc commit
-        run: |
-          git checkout 208a754044
-          git submodule update --init --recursive
-        working-directory: Arc
 
       - name: Setup Java 17
         uses: actions/setup-java@v4
@@ -36,40 +21,34 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Make Gradle Executable
-        run: chmod +x ./gradlew
-        working-directory: Mindustry
-
-      - name: Native Dependency Injection
+      - name: Inject MetalANGLE Framework
         run: |
-          echo "1. Creating Mindustry iOS libs folder..."
-          mkdir -p ios/libs
+          echo "1. Creating dedicated frameworks folder..."
+          mkdir -p ios/frameworks
           
-          echo "2. Securing the 64-bit libarc-freetype.a..."
-          find ../Arc -name "libarc-freetype.a" | grep -v "x86" | grep -v "ios32" | grep -v "simulator" | xargs -I {} cp {} ios/libs/
-          
-          echo "3. Downloading MetalANGLEKit..."
+          echo "2. Downloading MetalANGLEKit..."
           curl -L -o metal.zip https://github.com/libgdx/MetalANGLEKit/releases/download/v1.2.1/metalanglekit.zip
           
-          echo "4. Injecting MetalANGLE into Arc's source for JAR packaging..."
-          mkdir -p ../Arc/backends/backend-robovm/src/META-INF/robovm/ios/libs/
-          unzip -q -o metal.zip -d ../Arc/backends/backend-robovm/src/META-INF/robovm/ios/libs/
+          echo "3. Extracting framework..."
+          unzip -q -o metal.zip -d ios/frameworks/
           
-          # Adding to standard Gradle resources folder as a fallback
-          mkdir -p ../Arc/backends/backend-robovm/src/main/resources/META-INF/robovm/ios/libs/
-          unzip -q -o metal.zip -d ../Arc/backends/backend-robovm/src/main/resources/META-INF/robovm/ios/libs/
-        working-directory: Mindustry
+          echo "4. Linking framework folder cleanly in robovm.xml..."
+          sed -i.bak 's|</config>|  <frameworkPaths>\n    <path>frameworks</path>\n  </frameworkPaths>\n</config>|' ios/robovm.xml
+          
+          echo "5. Verifying XML injection:"
+          cat ios/robovm.xml | grep frameworkPaths -A 2
 
-      - name: Pack Natives
-        run: ./gradlew pack
-        working-directory: Mindustry
+      - name: Make Gradle Executable
+        run: chmod +x ./gradlew
 
-      - name: Compile IPA
-        run: ./gradlew ios:createIPA -Probovm.iosSkipSigning=true
-        working-directory: Mindustry
+      - name: Pack Natives (Using JitPack)
+        run: ./gradlew pack -PnoLocalArc=true
+
+      - name: Compile IPA (Using JitPack)
+        run: ./gradlew ios:createIPA -Probovm.iosSkipSigning=true -PnoLocalArc=true
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: Mindustry-iOS-v159.7
-          path: Mindustry/ios/build/robovm/*.ipa
+          path: ios/build/robovm/*.ipa
