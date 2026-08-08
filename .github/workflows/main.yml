@@ -11,6 +11,7 @@ jobs:
       - name: Checkout Mindustry
         uses: actions/checkout@v4
         with:
+          repository: Anuken/Mindustry
           ref: v159.7
 
       - name: Setup Java 17
