@@ -15,14 +15,18 @@ jobs:
           ref: v159.7
           path: Mindustry
 
-      - name: Checkout Arc
+      - name: Checkout Arc (Full History)
         uses: actions/checkout@v4
         with:
           repository: Anuken/Arc
-          ref: 208a754044
           path: Arc
-          submodules: recursive
           fetch-depth: 0
+
+      - name: Switch to exact Arc commit
+        run: |
+          git checkout 208a754044
+          git submodule update --init --recursive
+        working-directory: Arc
 
       - name: Setup Java 17
         uses: actions/setup-java@v4
