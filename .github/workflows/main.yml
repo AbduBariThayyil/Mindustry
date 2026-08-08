@@ -40,20 +40,24 @@ jobs:
         run: chmod +x ./gradlew
         working-directory: Mindustry
 
-      - name: The True Scalpel (Native Framework & Library Injection)
+      - name: Native Dependency Injection
         run: |
-          echo "1. Creating dedicated iOS library folder..."
+          echo "1. Creating Mindustry iOS libs folder..."
           mkdir -p ios/libs
           
-          echo "2. Securing ONLY 64-bit device static C++ libraries..."
-          find ../Arc -name "*.a" | grep -v "ios32" | grep -v "x86" | grep -v "simulator" | xargs -I {} cp {} ios/libs/
+          echo "2. Securing the 64-bit libarc-freetype.a..."
+          find ../Arc -name "libarc-freetype.a" | grep -v "x86" | grep -v "ios32" | grep -v "simulator" | xargs -I {} cp {} ios/libs/
           
-          echo "3. Downloading MetalANGLE framework directly into libs..."
+          echo "3. Downloading MetalANGLEKit..."
           curl -L -o metal.zip https://github.com/libgdx/MetalANGLEKit/releases/download/v1.2.1/metalanglekit.zip
-          unzip -q -o metal.zip -d ios/libs/
           
-          echo "4. Modifying RoboVM XML to natively read the new folder for BOTH frameworks and libraries..."
-          sed -i.bak 's|</config>|  <frameworkPaths>\n    <path>libs</path>\n  </frameworkPaths>\n  <libraryPaths>\n    <path>libs</path>\n  </libraryPaths>\n</config>|' ios/robovm.xml
+          echo "4. Injecting MetalANGLE into Arc's source for JAR packaging..."
+          mkdir -p ../Arc/backends/backend-robovm/src/META-INF/robovm/ios/libs/
+          unzip -q -o metal.zip -d ../Arc/backends/backend-robovm/src/META-INF/robovm/ios/libs/
+          
+          # Adding to standard Gradle resources folder as a fallback
+          mkdir -p ../Arc/backends/backend-robovm/src/main/resources/META-INF/robovm/ios/libs/
+          unzip -q -o metal.zip -d ../Arc/backends/backend-robovm/src/main/resources/META-INF/robovm/ios/libs/
         working-directory: Mindustry
 
       - name: Pack Natives
