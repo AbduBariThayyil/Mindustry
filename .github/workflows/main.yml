@@ -13,13 +13,34 @@ jobs:
         with:
           repository: Anuken/Mindustry
           ref: v159.7
+          path: Mindustry
           lfs: true
+
+      - name: Checkout Arc
+        uses: actions/checkout@v4
+        with:
+          repository: Anuken/Arc
+          path: Arc
+          fetch-depth: 0
+          lfs: true
+
+      - name: Switch to exact Arc commit
+        run: |
+          git checkout 208a754044
+          git submodule update --init --recursive
+        working-directory: Arc
 
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
+
+      - name: Compile Arc iOS Natives
+        run: |
+          chmod +x ./gradlew
+          ./gradlew jnigen jnigenBuildIOS
+        working-directory: Arc
 
       - name: Inject MetalANGLE Framework
         run: |
@@ -34,21 +55,20 @@ jobs:
           
           echo "4. Linking framework folder cleanly in robovm.xml..."
           sed -i.bak 's|</config>|  <frameworkPaths>\n    <path>frameworks</path>\n  </frameworkPaths>\n</config>|' ios/robovm.xml
-          
-          echo "5. Verifying XML injection:"
-          cat ios/robovm.xml | grep frameworkPaths -A 2
+        working-directory: Mindustry
 
-      - name: Make Gradle Executable
-        run: chmod +x ./gradlew
+      - name: Make Gradle Executable & Pack
+        run: |
+          chmod +x ./gradlew
+          ./gradlew pack
+        working-directory: Mindustry
 
-      - name: Pack Natives (Using JitPack)
-        run: ./gradlew pack -PnoLocalArc=true
-
-      - name: Compile IPA (Using JitPack)
-        run: ./gradlew ios:createIPA -Probovm.iosSkipSigning=true -PnoLocalArc=true
+      - name: Compile IPA
+        run: ./gradlew ios:createIPA -Probovm.iosSkipSigning=true
+        working-directory: Mindustry
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: Mindustry-iOS-v159.7
-          path: ios/build/robovm/*.ipa
+          path: Mindustry/ios/build/robovm/*.ipa
