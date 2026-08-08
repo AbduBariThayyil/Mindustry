@@ -36,6 +36,9 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Install C++ Build Tools (The Missing Link)
+        run: brew install ant autoconf automake libtool pkg-config
+
       - name: Compile Arc iOS Natives
         run: |
           chmod +x ./gradlew
