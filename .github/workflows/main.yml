@@ -30,11 +30,11 @@ jobs:
         working-directory: Mindustry
 
       - name: Pack Dependencies
-        run: ./gradlew pack -PnoLocalArc=true
+        run: ./gradlew pack
         working-directory: Mindustry
 
       - name: Compile IPA
-        run: ./gradlew ios:createIPA -Probovm.iosSkipSigning=true -PnoLocalArc=true
+        run: ./gradlew ios:createIPA -Probovm.iosSkipSigning=true
         working-directory: Mindustry
 
       - name: Upload IPA
