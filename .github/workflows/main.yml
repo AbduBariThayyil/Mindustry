@@ -40,23 +40,20 @@ jobs:
         run: chmod +x ./gradlew
         working-directory: Mindustry
 
-      - name: The Scalpel Hack (Native Framework Injection)
+      - name: The True Scalpel (Native Framework & Library Injection)
         run: |
           echo "1. Creating dedicated iOS library folder..."
           mkdir -p ios/libs
           
-          echo "2. Securing static C++ libraries..."
-          find ../Arc -name "*.a" -exec cp {} ios/libs/ \;
+          echo "2. Securing ONLY 64-bit device static C++ libraries..."
+          find ../Arc -name "*.a" | grep -v "ios32" | grep -v "x86" | grep -v "simulator" | xargs -I {} cp {} ios/libs/
           
           echo "3. Downloading MetalANGLE framework directly into libs..."
           curl -L -o metal.zip https://github.com/libgdx/MetalANGLEKit/releases/download/v1.2.1/metalanglekit.zip
           unzip -q -o metal.zip -d ios/libs/
           
-          echo "4. Modifying RoboVM XML to natively read the new folder..."
-          sed -i.bak 's|</config>|  <frameworkPaths>\n    <path>libs</path>\n  </frameworkPaths>\n</config>|' ios/robovm.xml
-          
-          echo "5. Verifying modification..."
-          cat ios/robovm.xml | grep frameworkPaths -A 2
+          echo "4. Modifying RoboVM XML to natively read the new folder for BOTH frameworks and libraries..."
+          sed -i.bak 's|</config>|  <frameworkPaths>\n    <path>libs</path>\n  </frameworkPaths>\n  <libraryPaths>\n    <path>libs</path>\n  </libraryPaths>\n</config>|' ios/robovm.xml
         working-directory: Mindustry
 
       - name: Pack Natives
