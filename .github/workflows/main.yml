@@ -21,7 +21,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Compile IPA
-        run: ./gradlew ios:createIPA
+        run: ./gradlew ios:createIPA -Probovm.iosSkipSigning=true
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
