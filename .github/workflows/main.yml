@@ -1,0 +1,30 @@
+name: Build Mindustry IPA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Make Gradle Executable
+        run: chmod +x ./gradlew
+
+      - name: Compile IPA
+        run: ./gradlew ios:createIPA
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mindustry-iOS
+          path: ios/build/robovm/*.ipa
