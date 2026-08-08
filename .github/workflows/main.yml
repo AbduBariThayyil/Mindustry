@@ -38,14 +38,24 @@ jobs:
         run: chmod +x ./gradlew
         working-directory: Mindustry
 
-      - name: Pack Natives
-        run: ./gradlew pack
-        working-directory: Mindustry
-
-      - name: Fix Legacy iOS Pathing Bug
+      - name: Fix Legacy iOS Pathing & Frameworks
         run: |
           mkdir -p ios/libs
+          mkdir -p ../Arc/backends/backend-robovm/src/META-INF/robovm/ios/libs
+          
+          # 1. Fix the missing .a files 
           find ../Arc -name "*.a" -exec cp {} ios/libs/ \;
+          
+          # 2. Force download the missing MetalANGLEKit framework
+          curl -L -o metal.zip https://github.com/libgdx/MetalANGLEKit/releases/download/v1.2.1/metalanglekit.zip
+          
+          # 3. Extract it into both places RoboVM expects to see it
+          unzip -o metal.zip -d ios/libs/
+          unzip -o metal.zip -d ../Arc/backends/backend-robovm/src/META-INF/robovm/ios/libs/
+        working-directory: Mindustry
+
+      - name: Pack Natives
+        run: ./gradlew pack
         working-directory: Mindustry
 
       - name: Compile IPA
